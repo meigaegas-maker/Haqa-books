@@ -1062,7 +1062,7 @@ function buildBanner(){var el=$('bn');if(!el)return;
  if(op.length){var d=ends[0]?new Date(ends[0]+'T00:00:00+07:00').toLocaleDateString('id-ID',{day:'numeric',month:'long'}):'';L.push({c:'b',k:'Pre-Order',t:op.length+' PO sedang dibuka',s:d?'PO terdekat tutup '+d+'.':'Pesan sebelum kuota tutup.',b:'Lihat Pre-Order',v:'poon',im:im(op)})}
  L.push({c:'c',k:'Member',t:'Gabung member, harga lebih hemat',s:'Diskon hingga 40% dan akses grup partner.',b:'Gabung Member',h:MB_URL,im:im(ORDER.filter(function(b){return b.st==='ready'&&!b.promo}))});
  el.innerHTML='<div class="bnr" id="bnr" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Info promo">'+L.map(function(x,k){return'<div class="bs '+x.c+'" role="group" aria-label="'+(k+1)+' dari '+L.length+'"><div class="bx"><span class="bk">'+x.k+'</span><strong class="bh">'+esc(x.t)+'</strong><p class="bp">'+esc(x.s)+'</p>'+(x.h?'<a class="bb" href="'+esc(x.h)+'" target="_blank" rel="noopener">'+x.b+'</a>':'<button type="button" class="bb" data-bv="'+x.v+'">'+x.b+'</button>')+'</div>'+x.im+'</div>'}).join('')+'</div><div class="bnd" id="bnd">'+L.map(function(x,k){return'<button type="button" data-bi="'+k+'" aria-label="Slide '+(k+1)+'" aria-current="'+(k===0)+'"></button>'}).join('')+'</div>';
- var r=$('bnr'),sl=[].slice.call(r.querySelectorAll('.bs')),ds=[].slice.call(el.querySelectorAll('#bnd button')),cur=0,pause=0,vis=true,ts=0;
+ var r=$('bnr'),sl=[].slice.call(r.querySelectorAll('.bs')),ds=[].slice.call(el.querySelectorAll('#bnd button')),cur=0,pause=0;
  function go_(i){cur=(i+sl.length)%sl.length;r.scrollTo({left:sl[cur].offsetLeft,behavior:'smooth'})}
  function mark(){var i=0,best=1e9;sl.forEach(function(x,k){var d=Math.abs(x.offsetLeft-r.scrollLeft);if(d<best){best=d;i=k}});cur=i;ds.forEach(function(d,k){d.setAttribute('aria-current',k===i)})}
  r.addEventListener('scroll',mark,{passive:true});
@@ -1071,8 +1071,7 @@ function buildBanner(){var el=$('bn');if(!el)return;
   var c=document.querySelector('#nt button[data-v="'+t.dataset.bv+'"]');if(c)c.click();var h=$('ph2');if(h)h.scrollIntoView({behavior:'smooth'})});
  ['pointerdown','mouseenter','focusin','touchstart'].forEach(function(n){el.addEventListener(n,function(){pause=1},{passive:true})});
  ['mouseleave','focusout','touchend'].forEach(function(n){el.addEventListener(n,function(){setTimeout(function(){pause=0},3000)},{passive:true})});
- if(window.IntersectionObserver)new IntersectionObserver(function(es){vis=es[0].isIntersecting}).observe(el);window.addEventListener('scroll',function(){ts=Date.now()},{passive:true});
- if(sl.length>1&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){clearInterval(BN_T);BN_T=setInterval(function(){if(pause||!vis||document.hidden||el.hidden||Date.now()-ts<1500)return;go_(cur+1)},5000)}
+ if(sl.length>1&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){clearInterval(BN_T);BN_T=setInterval(function(){if(pause||document.hidden||el.hidden)return;go_(cur+1)},5000)}
  homeSync()}
 
 /* ---------- bar progres keranjang ---------- */
