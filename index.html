@@ -11,7 +11,9 @@
 .mbj{text-decoration:none;display:inline-block;margin-top:6px;font:800 .88rem 'DM Sans',sans-serif;padding:9px 16px;border-radius:999px;border:0;background:#1f9d4a;color:#fff;cursor:pointer}
 .mbn .mbj{margin-top:0}
 .mbh{font-size:.8rem;opacity:.85}
-.mbh2{display:block;margin-top:3px;font-size:.76rem;font-weight:700;color:#8a5a00}
+.mbh2{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:0}
+.ci .mbh2 span{flex:1;min-width:0;font-size:.74rem;line-height:1.35;font-weight:500;color:var(--mut)}.ci .mbh2 b{display:inline;font-size:inherit;font-weight:700;color:var(--ink)}
+.ci .mbh2 .cgx{padding:1px 9px;font-size:.68rem;border-width:1px;flex:none}
 .mbr{display:flex;gap:6px;align-items:center;margin-top:6px}
 .mbk{flex:1;min-width:0;font:600 .9rem 'DM Sans',sans-serif;padding:9px 12px;border:1.5px solid #f0c24a;border-radius:10px;background:#fff;color:#3b2a00;text-transform:uppercase}
 .mbr .mbj{margin-top:0}
@@ -882,7 +884,12 @@ function mtiers(b){var P=(b.pid&&B[b.pid])||b,t=b.mt||P.mt;if(t)return rs2(t);va
 function mrate(b,q){if(b.st==='habis')return 0;var t=mtiers(b),r=0;q=q?gq(b,q):1;for(var k=0;k<t.length;k++)if(q>=t[k][0])r=t[k][1]/100;return r} function gq(b,q){var P=(b.pid&&B[b.pid])||b;if(!b.mg||!P.vr)return q;var n=0;P.vr.forEach(function(v){if(B[v].mg===b.mg)n+=(cart&&cart[v])||0});return Math.max(q,n)}
 function mprice(b,q){var r=mrate(b,q);return(b&&b.pr&&r)?Math.round(b.pr*(1-r)):0}
 function unit(b,q){var u=(b.st==='poon'&&q>1&&b.pr)?Math.round(b.pr*(1-PO_DISC)):b.pr;if(isMem()){var m=mprice(b,q);if(m&&m<u)u=m}return u}
-function mbHint(b,q){if(!isMem()||b.st==='habis'||!b.pr)return'';var t=mtiers(b);for(var k=0;k<t.length;k++)if(t[k][0]>q){return'<small class="mbh2">\u2B50 Harga member: tambah '+(t[k][0]-q)+' pcs lagi, jadi '+money(Math.round(b.pr*(1-t[k][1]/100)))+'/pcs</small>'}return''}
+function nextTier(b,q){if(!b||!b.pr||b.st==='habis'||b.st==='closed')return null;var mem=isMem(),qq=gq(b,q),n=0,nu=0;
+ if(mem){var t=mtiers(b);for(var k=0;k<t.length;k++)if(t[k][0]>qq){n=t[k][0];nu=Math.round(b.pr*(1-t[k][1]/100));break}
+  if(n&&b.st==='poon')nu=Math.min(nu,Math.round(b.pr*(1-PO_DISC)))}
+ else if(b.st==='poon'&&q===1){n=2;nu=Math.round(b.pr*(1-PO_DISC))}
+ if(!n)return null;var cu=unit(b,q);if(nu>=cu)return null;var need=n-qq;return{need:need,nu:nu,sv:(q+need)*(cu-nu)}}
+function mbHint(b,q){var x=nextTier(b,q);if(!x)return'';return'<div class="mbh2"><span>Tambah <b>'+x.need+'</b> lagi: <b>'+money(x.nu)+'</b>/pcs \u00B7 hemat <b>'+money(x.sv)+'</b></span><button type="button" class="cgx cgs" data-a="cp" data-i="'+b.i+'" aria-label="Tambah 1 pcs">+1</button></div>'}
 var MB_OPEN=0,RS_OPEN=0,TC_OPEN=0;
 var TNC=['Harga member/reseller berlaku untuk akun dengan kode member aktif.','Besar diskon mengikuti aturan masing-masing produk dan jumlah pembelian.','Kode member didapat dari pesan sematan di grup WhatsApp member.','Harga dan stok dapat berubah sewaktu-waktu.'];
 function tncHTML(b){var o=!!TC_OPEN;return'<button type="button" class="tnc" data-a="tc" data-i="'+b.i+'" aria-expanded="'+o+'">Syarat &amp; ketentuan</button>'+(o?'<ol class="tncl">'+TNC.map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ol>'+'<a class="tncf" href="syarat-ketentuan.html" style="display:inline-block;margin-top:6px;font:700 .82rem \'DM Sans\',sans-serif;color:#8a5a12">Baca S&amp;K Partner lengkap →</a>':'')}
@@ -1084,7 +1091,7 @@ function qclose(){var el=$('qm');if(el)el.hidden=true;if($('ov').hidden)document
 
 /* ---------- keranjang & favorit ---------- */
 function cartView(){fixCart();var L=items();if(!L.length){open_('<h3>Keranjang</h3><p>Belum ada buku. Klik <b>+ Keranjang</b> pada buku pilihan Anda.</p>');return}
- var n=0,t=0,h='<h3>Keranjang</h3>'+cartNudge(L)+L.map(function(b){var q=cart[b.i],u=unit(b,q);n+=q;t+=u*q;return'<div class="ci cx"><div class="cn"><b>'+esc(pname(b))+'</b>'+(b.pid?'<em>Varian: '+esc(b.vl)+(b.tr?' \u00B7 '+esc(b.tr):'')+'</em>':'')+'<span>'+money(u)+'/pcs</span>'+mbHint(b,q)+'</div><div class="q"><button type="button" data-a="cm" data-i="'+b.i+'" aria-label="Kurangi">\u2212</button><span class="qv">'+q+'</span><button type="button" data-a="cp" data-i="'+b.i+'" aria-label="Tambah">+</button></div><div class="cs"><span>Subtotal: <b>'+money(u*q)+'</b></span><button type="button" class="cdel" data-a="cd" data-i="'+b.i+'" aria-label="Hapus dari keranjang" title="Hapus"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/></svg></button></div></div>'}).join('')+'<div class="tot"><span>'+n+' buku</span><span>'+money(t)+'</span></div><a class="cw" href="checkout.html" style="display:block;text-align:center;text-decoration:none">Lanjutkan ke pembayaran</a>';open_(h)}
+ var n=0,t=0,h='<h3>Keranjang</h3>'+cartNudge(L)+L.map(function(b){var q=cart[b.i],u=unit(b,q);n+=q;t+=u*q;return'<div class="ci cx"><div class="cn"><b>'+esc(pname(b))+'</b>'+(b.pid?'<em>Varian: '+esc(b.vl)+(b.tr?' \u00B7 '+esc(b.tr):'')+'</em>':'')+'<span>'+money(u)+'/pcs</span></div><div class="q"><button type="button" data-a="cm" data-i="'+b.i+'" aria-label="Kurangi">\u2212</button><span class="qv">'+q+'</span><button type="button" data-a="cp" data-i="'+b.i+'" aria-label="Tambah">+</button></div><div class="cs"><span>Subtotal: <b>'+money(u*q)+'</b></span><button type="button" class="cdel" data-a="cd" data-i="'+b.i+'" aria-label="Hapus dari keranjang" title="Hapus"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/></svg></button></div>'+mbHint(b,q)+'</div>'}).join('')+'<div class="tot"><span>'+n+' buku</span><span>'+money(t)+'</span></div><a class="cw" href="checkout.html" style="display:block;text-align:center;text-decoration:none">Lanjutkan ke pembayaran</a>';open_(h)}
 function favView(){var L=Object.keys(likes).map(function(k){return B[k]}).filter(Boolean);if(!L.length){open_('<h3>Favorit</h3><p>Belum ada favorit. Klik ikon love pada buku yang Anda suka.</p>');$('mb').dataset.v='fav';return}
  var h='<h3>Favorit ('+L.length+' buku)</h3>'+L.map(function(b){return'<div class="ci"><div><b>'+esc(b.t)+'</b><span>'+(b.pr?money(b.pr):'Harga belum tertera')+'</span></div><div class="fa"><button class="fv" data-a="fd" data-i="'+b.i+'">Lihat</button>'+lkHtml(b.i)+'</div></div>'}).join('');open_(h);$('mb').dataset.v='fav'}
 
@@ -1185,8 +1192,8 @@ function cartNudge(L){if(!L.length)return'';var mem=isMem(),cur=0,mt=0,best=null
   if(!n)return;var cu=unit(b,q);if(nu>=cu)return;var need=n-qq,sv=(q+need)*(cu-nu);
   if(!best||need<best.need||(need===best.need&&sv>best.sv))best={b:b,q:qq,n:n,need:need,nu:nu,sv:sv}});
  var IT='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',IS='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',h='';
- if(best)h+='<div class="cgl">'+IT+'<span>Tambah <b>'+best.need+'</b> lagi'+(L.length>1?' <em>('+esc(pname(best.b).slice(0,20))+')</em>':'')+': <b>'+money(best.nu)+'</b>/pcs, hemat <b>'+money(best.sv)+'</b></span><button type="button" class="cgx cgs" data-a="cp" data-i="'+best.b.i+'" aria-label="Tambah 1 pcs">+1</button></div><div class="cgb" role="progressbar" aria-valuemin="0" aria-valuemax="'+best.n+'" aria-valuenow="'+best.q+'" aria-label="Menuju harga lebih hemat"><i style="width:'+Math.min(100,Math.round(best.q/best.n*100))+'%"></i></div>';
- else if(mem&&cur>0)h+='<div class="cgl">'+IS+'<span>Harga member terbaik sudah Anda dapatkan</span></div>';
+ var any=L.some(function(b){return nextTier(b,cart[b.i]||0)});
+ if(mem&&cur>0&&!any)h+='<div class="cgl">'+IS+'<span>Harga member terbaik sudah Anda dapatkan</span></div>';
  if(!mem&&cur-mt>0)h+='<div class="cgl'+(h?' cgm':'')+'">'+IS+'<span>Member: total <b>'+money(mt)+'</b> (hemat '+money(cur-mt)+')</span><a class="cgx cgs" href="'+MB_URL+'" target="_blank" rel="noopener">Gabung</a></div>';
  return h?'<div class="cng">'+h+'</div>':''}
 
